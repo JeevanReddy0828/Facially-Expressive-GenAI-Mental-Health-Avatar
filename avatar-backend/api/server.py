@@ -270,6 +270,68 @@ async def list_expressions():
     return {"emotions": list(EXPRESSION_TEMPLATES.keys()), "templates": EXPRESSION_TEMPLATES}
 
 
+# ============================================
+# RAG Endpoints
+# ============================================
+
+@app.get("/rag/knowledge-base")
+async def get_knowledge_base():
+    """Get all knowledge base categories and document counts."""
+    from models.rag import MentalHealthKnowledgeBase
+    
+    kb = MentalHealthKnowledgeBase.KNOWLEDGE_BASE
+    return {
+        "categories": list(kb.keys()),
+        "document_counts": {cat: len(docs) for cat, docs in kb.items()},
+        "total_documents": sum(len(docs) for docs in kb.values())
+    }
+
+
+@app.get("/rag/retrieve")
+async def retrieve_documents(query: str, emotion: Optional[str] = None, k: int = 3):
+    """Retrieve relevant documents from knowledge base."""
+    from models.rag import RAGRetriever
+    
+    retriever = RAGRetriever(use_transformers=False)
+    retriever.initialize()
+    
+    results = retriever.retrieve(query, k=k, emotion_filter=emotion)
+    
+    return {
+        "query": query,
+        "emotion_filter": emotion,
+        "results": [
+            {
+                "id": doc.id,
+                "content": doc.content,
+                "category": doc.metadata.get("category"),
+                "relevance_score": float(score)
+            }
+            for doc, score in results
+        ]
+    }
+
+
+@app.get("/rag/resources/{emotion}")
+async def get_resources_for_emotion(emotion: str):
+    """Get relevant therapeutic resources for an emotion."""
+    from models.rag import MentalHealthKnowledgeBase
+    
+    docs = MentalHealthKnowledgeBase.get_by_emotion(emotion)
+    
+    return {
+        "emotion": emotion,
+        "resources": [
+            {
+                "id": doc.id,
+                "content": doc.content,
+                "category": doc.metadata.get("category")
+            }
+            for doc in docs[:5]
+        ]
+    }
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv('PORT', 8000)))

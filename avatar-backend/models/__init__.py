@@ -14,6 +14,7 @@ except ImportError:
 from .semantic_analyzer import SemanticAnalyzer, EmotionScores
 from .response_generator import ResponseGenerator, ChatSession
 from .tts_lipsync import TTSLipSyncPipeline, LipSyncGenerator
+from .rag import RAGRetriever, MentalHealthKnowledgeBase
 
 __all__ = [
     'FacialExpressionVAE',
@@ -25,5 +26,7 @@ __all__ = [
     'ChatSession',
     'TTSLipSyncPipeline',
     'LipSyncGenerator',
+    'RAGRetriever',
+    'MentalHealthKnowledgeBase',
     'VAE_AVAILABLE'
 ]
